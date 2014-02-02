@@ -1,7 +1,20 @@
 #!/bin/bash
 set -eu -o pipefail
 
-DIR=$(cd "$(dirname "$BASH_SOURCE")"; pwd -P)
+normalize_link() {
+    local file=$1
+    while test -L "$file"; do
+        local linkto=$(readlink "$file")
+        if [[ "${linkto}" == /* ]]; then
+            file=$linkto
+        else
+            file="$(dirname "$file")/$linkto"
+        fi
+    done
+    echo "$file"
+}
+
+DIR=$(cd "$(dirname "$(normalize_link "$BASH_SOURCE")")"; pwd -P)
 export PATH="$DIR/inc:$DIR/impl:$PATH"
 
 . color.bash
