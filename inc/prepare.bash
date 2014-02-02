@@ -1,0 +1,54 @@
+prepare__init() {
+	declare -g prepare__tmp_dir=$(mktemp -d -t hm-make.XXXXXXXXXX)
+	trap prepare__cleanup EXIT
+
+	declare -g prepare__files_dir="$prepare__tmp_dir/files"
+	mkdir "$prepare__files_dir"
+
+	declare -g prepare__sources_dir="$prepare__tmp_dir/sources"
+	mkdir "$prepare__sources_dir"
+}
+
+prepare__cleanup() {
+	if [[ -n "${prepare__tmp_dir+x}" ]]; then
+		if [[ -n "${HM_KEEP+x}" ]]; then
+			echo "[keep] prepare__tmp_dir: $prepare__tmp_dir"
+		else
+			rm -r -- "$prepare__tmp_dir" || true
+		fi
+	fi
+}
+
+prepare__files() {
+	local pkg_path=$1
+	local pkg_id=$(pkg__get_pkg_id "$pkg_path")
+
+	mkdir -p "$prepare__files_dir/$pkg_id"
+
+	if [[ -x "$pkg_path/prepare" ]]; then
+		echo "FIXME: $pkg_id/prepare is not supported" >&2
+		exit 1
+	else
+		(
+			if [[ ! -n ${HM_VERBOSE+x} ]]; then
+				exec 1>/dev/null
+			fi
+
+			cd "$pkg_path"
+			if [[ -e "./files/.git" ]]; then
+				cd files
+				git pull --ff-only --all
+			fi
+		)
+
+		rsync -a "$pkg_path/" "$prepare__files_dir/$pkg_id/"
+	fi
+}
+
+prepare__sources() {
+	# 'local' would override hm-dir-checksum exit code
+	pkg_checksum=$(hm-dir-checksum "$prepare__files_dir/$pkg_id/")
+
+	mkdir -p "$prepare__sources_dir/$pkg_id/"
+	mv "$prepare__files_dir/$pkg_id" "$prepare__sources_dir/$pkg_id/$pkg_checksum"
+}

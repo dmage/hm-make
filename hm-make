@@ -1,0 +1,175 @@
+#!/bin/bash
+set -eu -o pipefail
+
+DIR=$(cd "$(dirname "$BASH_SOURCE")"; pwd -P)
+export PATH="$DIR/inc:$DIR/impl:$PATH"
+
+. color.bash
+. pkg.bash
+. dump.bash
+. real.bash
+. discover.bash
+. prepare.bash
+. remote.bash
+
+usage() {
+	echo "usage: $0 [-aktv] [-h HOST] [-l LOGIN] [-r ROOT] [--generated] PACKAGE"
+	exit 1
+}
+
+opts="$(getopt -o ah:kl:r:tv --long ask,host:,keep,login:,root:,tree,verbose,help,generated -n "$0" -- "$@")"
+eval set -- "$opts"
+
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+		-a|--ask)
+			HM_ASK=1
+			shift
+			;;
+		-h|--host)
+			REAL_HOST=$2
+			shift 2
+			;;
+		-k|--keep)
+			HM_KEEP=1
+			shift
+			;;
+		-l|--login)
+			REAL_LOGIN=$2
+			shift 2
+			;;
+		-r|--root)
+			REAL_ROOT=$2
+			shift 2
+			;;
+		-t|--tree)
+			HM_TREE=1
+			shift
+			;;
+		-v|--verbos)
+			HM_VERBOSE=1
+			shift
+			;;
+		--help)
+			usage
+			;;
+		--generated)
+			HM_GENERATED=1
+			shift
+			;;
+		--)
+			shift
+			break
+			;;
+		*)
+			echo "$0: internal error while processing options" >&2
+			exit 1
+	esac
+done
+
+if [[ $# -ne 1 ]]; then
+	usage
+fi
+
+real__init
+if [[ -n "${HM_VERBOSE+x}" ]]; then
+	dump__verbose REAL_
+fi
+
+pkg__traverse "$1"
+if [[ -n "${HM_ASK+x}" || -n "${HM_VERBOSE+x}" ]]; then
+	if [[ -n "${HM_TREE+x}" ]]; then
+		for (( i = ${#pkg__verbose_ordered[@]} - 1; $i >= 0; i-- )); do
+			id=$(pkg__get_pkg_id "${pkg__verbose_ordered[$i]}")
+			if [[ "${pkg__verbose_new[$i]}" -ne 0 ]]; then
+				mode="I"
+				color="$color__green"
+			else
+				mode=" "
+				color=$color__blue
+			fi
+			indent=$(printf "%*s" "${pkg__verbose_depth[$i]}" "")
+
+			echo "[$color$mode$color__reset] $indent$color$id$color__reset"
+		done
+	else
+		for pkg_path in "${pkg__ordered[@]}"; do
+			mode="I"
+			color="$color__green"
+			id=$(pkg__get_pkg_id "$pkg_path")
+			echo "[$color$mode$color__reset] $color$id$color__reset"
+		done
+	fi
+	echo
+fi
+if [[ -n "${HM_ASK+x}" ]]; then
+	yn_q="[$color__green${color__bold}Yes$color__reset/$color__red${color__bold}No$color__reset]"
+	echo -n "${color__bold}Would you like to merge these packages?$color__reset $yn_q "
+	read -r yn
+	while true; do
+		case "$yn" in
+			[Yy][Ee][Ss]|[Yy])
+				break
+				;;
+			[Nn][Oo]|[Nn])
+				echo
+				echo "Quitting."
+				echo
+				exit 1
+				;;
+		esac
+
+		echo -n "Sorry, response '$yn' not understood. $yn_q "
+		read -r yn
+	done
+	echo
+fi
+
+export HM_VERBOSE
+
+discover__run
+if [[ -n "${HM_VERBOSE+x}" ]]; then
+	dump__verbose DISCOVER_
+fi
+
+prepare__init
+total=${#pkg__ordered[@]}
+
+echo "$color__bold>>>$color__reset Preparing package files"
+step=0
+for pkg_path in "${pkg__ordered[@]}"; do
+	(( step += 1 ))
+	if [[ -n "${HM_VERBOSE+x}" ]]; then
+		printf "($color__yellow$color__bold%*d$color__reset of $color__yellow$color__bold%d$color__reset) %s\n" "${#total}" "$step" "$total" "$(pkg__get_pkg_id "$pkg_path")"
+	fi
+
+	prepare__files "$pkg_path"
+done
+if [[ -n "${HM_VERBOSE+x}" ]]; then
+	echo
+fi
+
+echo "$color__bold>>>$color__reset Versioning package sources"
+step=0
+for pkg_path in "${pkg__ordered[@]}"; do
+	pkg_id=$(pkg__get_pkg_id "$pkg_path")
+	(( step += 1 ))
+	if [[ -n "${HM_VERBOSE+x}" ]]; then
+		printf "($color__yellow$color__bold%*d$color__reset of $color__yellow$color__bold%d$color__reset) %s\n" "${#total}" "$step" "$total" "$pkg_id"
+	fi
+
+	prepare__sources "$pkg_id"
+done
+if [[ -n "${HM_VERBOSE+x}" ]]; then
+	echo
+fi
+
+echo "$color__bold>>>$color__reset Transferring sources to target machine"
+real__rsync "$prepare__sources_dir/" "$REAL_HM_DIR/sources/" -a --delete ${HM_VERBOSE+-v}
+if [[ -n "${HM_VERBOSE+x}" ]]; then
+	echo
+fi
+
+remote__run
+
+exit 0
