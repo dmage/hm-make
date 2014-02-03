@@ -53,9 +53,9 @@ __pkg__traverse() {
 }
 
 pkg__traverse() {
-	declare -ga pkg__ordered=()
-	declare -ga pkg__verbose_ordered=()
-	declare -ga pkg__verbose_depth=()
-	declare -ga pkg__verbose_new=()
+	pkg__ordered=()
+	pkg__verbose_ordered=()
+	pkg__verbose_depth=()
+	pkg__verbose_new=()
 	__pkg__traverse "$@"
 }

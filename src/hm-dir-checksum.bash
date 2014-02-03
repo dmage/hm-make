@@ -3,9 +3,18 @@ set -efu -o pipefail
 
 TARGET=$1
 
-checksum() {
-	sha1sum - | cut -d' ' -f1
-}
+if [[ -n "$(which sha1sum)" ]]; then
+	checksum() {
+		sha1sum - | cut -d' ' -f1
+	}
+elif [[ -n "$(which shasum)" ]]; then
+	checksum() {
+		shasum - | cut -d' ' -f1
+	}
+else
+	echo "$0: no sha1sum or shasum found" >&2
+	exit 1
+fi
 
 PATH="$PATH:$(pwd)"
 cd "$TARGET"

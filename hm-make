@@ -17,7 +17,7 @@ usage() {
 	exit 1
 }
 
-opts="$(getopt -o ah:kl:r:tv --long ask,host:,keep,login:,root:,tree,verbose,help,generated -n "$0" -- "$@")"
+opts="$(getopt ah:kl:r:tv "$@")"
 eval set -- "$opts"
 
 while [[ $# -gt 0 ]]; do

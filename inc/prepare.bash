@@ -1,11 +1,11 @@
 prepare__init() {
-	declare -g prepare__tmp_dir=$(mktemp -d -t hm-make.XXXXXXXXXX)
+	prepare__tmp_dir=$(mktemp -d -t hm-make.XXXXXXXXXX)
 	trap prepare__cleanup EXIT
 
-	declare -g prepare__files_dir="$prepare__tmp_dir/files"
+	prepare__files_dir="$prepare__tmp_dir/files"
 	mkdir "$prepare__files_dir"
 
-	declare -g prepare__sources_dir="$prepare__tmp_dir/sources"
+	prepare__sources_dir="$prepare__tmp_dir/sources"
 	mkdir "$prepare__sources_dir"
 }
 

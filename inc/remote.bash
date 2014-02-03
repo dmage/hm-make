@@ -1,14 +1,14 @@
 remote__init() {
-	declare -g remote__tmp_dir=$(mktemp -d -t hm-make.XXXXXXXXXX)
+	remote__tmp_dir=$(mktemp -d -t hm-make.XXXXXXXXXX)
 	trap remote__cleanup EXIT
 
-	declare -g remote__files_dir="$remote__tmp_dir/files"
+	remote__files_dir="$remote__tmp_dir/files"
 	mkdir -p "$remote__files_dir"
 
-	declare -g remote__root_dir="$remote__tmp_dir/root"
+	remote__root_dir="$remote__tmp_dir/root"
 	mkdir -p "$remote__root_dir"
 
-	declare -g remote__index="$remote__tmp_dir/index"
+	remote__index="$remote__tmp_dir/index"
 	touch "$remote__index"
 }
 
