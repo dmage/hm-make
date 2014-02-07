@@ -14,7 +14,7 @@ prepare__cleanup() {
 		if [[ -n "${HM_KEEP+x}" ]]; then
 			echo "[keep] prepare__tmp_dir: $prepare__tmp_dir"
 		else
-			rm -r -- "$prepare__tmp_dir" || true
+			rm -rf -- "$prepare__tmp_dir" || true
 		fi
 	fi
 }
@@ -26,23 +26,17 @@ prepare__files() {
 	mkdir -p "$prepare__files_dir/$pkg_id"
 
 	if [[ -x "$pkg_path/prepare" ]]; then
-		echo "FIXME: $pkg_id/prepare is not supported" >&2
-		exit 1
-	else
 		(
 			if [[ ! -n ${HM_VERBOSE+x} ]]; then
 				exec 1>/dev/null
 			fi
 
 			cd "$pkg_path"
-			if [[ -e "./files/.git" ]]; then
-				cd files
-				git pull --ff-only --all
-			fi
+			"$pkg_path/prepare"
 		)
-
-		rsync -a "$pkg_path/" "$prepare__files_dir/$pkg_id/"
 	fi
+
+	rsync -a "$pkg_path/" "$prepare__files_dir/$pkg_id/"
 }
 
 prepare__sources() {

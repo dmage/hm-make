@@ -26,11 +26,11 @@ export PATH="$DIR/inc:$DIR/impl:$PATH"
 . remote.bash
 
 usage() {
-	echo "usage: $0 [-aktv] [-h HOST] [-l LOGIN] [-r ROOT] [--generated] PACKAGE"
+	echo "usage: $0 [-aktvG] [-h HOST] [-l LOGIN] [-r ROOT] PACKAGE"
 	exit 1
 }
 
-opts="$(getopt ah:kl:r:tv "$@")"
+opts="$(getopt ah:kl:r:tvG "$@")"
 eval set -- "$opts"
 
 while [[ $# -gt 0 ]]; do
@@ -63,12 +63,12 @@ while [[ $# -gt 0 ]]; do
 			HM_VERBOSE=1
 			shift
 			;;
-		--help)
-			usage
-			;;
-		--generated)
+		-G|--generated)
 			HM_GENERATED=1
 			shift
+			;;
+		--help)
+			usage
 			;;
 		--)
 			shift
