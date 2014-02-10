@@ -1,4 +1,6 @@
 pkg__get_pkg_id() {
+	test -d "$1"
+
 	local pkg_path=$(cd "$1"; pwd -P)
 	local repo_path=$(cd "$pkg_path/.."; pwd -P)
 
@@ -11,6 +13,8 @@ pkg__get_pkg_id() {
 __pkg__traverse() {
 	local pkg_path=${1:?$FUNCNAME: expected pkg_path}
 	shift
+
+	test -d "$pkg_path"
 
 	local pkg_path=$(cd "$pkg_path"; pwd -P)
 	local pkg_id=$(pkg__get_pkg_id "$pkg_path")
