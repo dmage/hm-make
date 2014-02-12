@@ -19,7 +19,7 @@ real__rsync() {
 	local dest=$1; shift
 
 	if [ -n "${REAL_HOST}" ]; then
-		rsync -e ssh "$@" "$src" "$REAL_HOST:$dest"
+		rsync -e ssh "$@" "$src" "$REAL_LOGIN@$REAL_HOST:$dest"
 	else
 		rsync "$@" "$src" "$dest"
 	fi	
