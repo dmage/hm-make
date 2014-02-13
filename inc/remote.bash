@@ -171,7 +171,7 @@ remote__gencode() {
 
 	dump__bash_var HM_
 	dump__bash_var REAL_
-	dump__bash_var DISCOVER_
+	dump__bash_var_export DISCOVER_
 	dump__bash_var color__
 	dump__bash_func remote__
 
@@ -179,5 +179,12 @@ remote__gencode() {
 }
 
 remote__run() {
+	if [[ -n "${HM_GENERATED+x}" ]]; then
+		echo "$color__yellow=== remote [generated code] ===$color__reset"
+		remote__gencode
+		echo "$color__yellow=== cut ===$color__reset"
+		echo
+	fi
+
 	remote__gencode | real__bash
 }
