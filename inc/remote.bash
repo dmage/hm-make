@@ -17,7 +17,8 @@ remote__cleanup() {
 		if [[ -n "${HM_KEEP+x}" ]]; then
 			echo "[keep] remote__tmp_dir: $remote__tmp_dir"
 		else
-			rm -r -- "$remote__tmp_dir" || true
+			find "$remote__tmp_dir" -type d \! -perm -u+w -exec chmod u+w {} + || true
+			rm -rf -- "$remote__tmp_dir" || true
 		fi
 	fi
 }

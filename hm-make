@@ -101,7 +101,7 @@ if [[ -n "${HM_ASK+x}" || -n "${HM_VERBOSE+x}" ]]; then
 				mode=" "
 				color=$color__blue
 			fi
-			indent=$(printf "%*s" "${pkg__verbose_depth[$i]}" "")
+			indent=$(printf "%*s" "$((${pkg__verbose_depth[$i]} * 2))" "")
 
 			echo "[$color$mode$color__reset] $indent$color$id$color__reset"
 		done

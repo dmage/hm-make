@@ -1,6 +1,6 @@
 pkg__get_pkg_id() {
-	if [[ ! -d "$pkg_path" ]]; then
-		echo "$FUNCNAME: $pkg_path: invalid package path, expected directory" >&2
+	if [[ ! -d "$1" ]]; then
+		echo "$FUNCNAME: $1: invalid package path, expected directory" >&2
 		exit 1
 	fi
 

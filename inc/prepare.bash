@@ -14,7 +14,7 @@ prepare__cleanup() {
 		if [[ -n "${HM_KEEP+x}" ]]; then
 			echo "[keep] prepare__tmp_dir: $prepare__tmp_dir"
 		else
-			find "$prepare__tmp_dir" -type d -exec chmod u+w {} +
+			find "$prepare__tmp_dir" -type d \! -perm -u+w -exec chmod u+w {} + || true
 			rm -rf -- "$prepare__tmp_dir" || true
 		fi
 	fi
